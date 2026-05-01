@@ -1,0 +1,154 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;700;900&family=Inter:wght@400;500;600;700;800;900&family=DM+Mono:wght@500&display=swap');
+
+:root {
+  color-scheme: dark;
+
+  /* ---------- Palette: deep forest hunter's lodge with antique gold ---------- */
+  --bg-deep:       #04070a;
+  --bg-night:      #0a1014;
+  --bg-mist:       #14201c;
+
+  --wood-dark:     #1a1108;
+  --wood-mid:      #2c1d0c;
+  --wood-light:    #4a341c;
+  --wood-warm:     #6b4824;
+
+  --brass-deep:    #5e4318;
+  --brass:         #b88a2c;
+  --brass-bright:  #f0c75a;
+  --gold:          #ffd97a;
+  --gold-glow:     #ffe066;
+
+  --emerald-deep:  #0f2820;
+  --emerald:       #1d4d3a;
+  --emerald-bright:#2a8a6a;
+
+  --ruby-deep:     #4a0808;
+  --ruby:          #8b1a1a;
+  --ruby-bright:   #c9543a;
+  --ruby-glow:     #ff7b4a;
+
+  --ivory:         #f5e9c8;
+  --bone:          #e9dcc1;
+  --bone-dim:      #b8a888;
+  --parchment:     #d8c89a;
+
+  --shadow-deep:   rgba(0, 0, 0, 0.75);
+  --shadow:        rgba(0, 0, 0, 0.55);
+  --shadow-soft:   rgba(0, 0, 0, 0.35);
+
+  /* ---------- Typography ---------- */
+  --font-brand:   'Cinzel Decorative', 'Cinzel', serif;
+  --font-display: 'Cinzel', 'Times New Roman', serif;
+  --font-body:    'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono:    'DM Mono', 'IBM Plex Mono', monospace;
+
+  /* ---------- Surface tokens ---------- */
+  --surface-wood:
+    linear-gradient(180deg, var(--wood-mid) 0%, var(--wood-dark) 100%);
+  --surface-wood-grain:
+    repeating-linear-gradient(94deg,
+      rgba(0,0,0,0.0)   0px,
+      rgba(0,0,0,0.18)  1px,
+      rgba(0,0,0,0.0)   3px,
+      rgba(255,217,122,0.04) 4px,
+      rgba(0,0,0,0.0)   8px),
+    var(--surface-wood);
+  --surface-velvet:
+    radial-gradient(ellipse at 50% 0%, var(--emerald) 0%, var(--emerald-deep) 60%, var(--bg-deep) 100%);
+  --brass-rim: 1px solid var(--brass);
+
+  /* ---------- Glows ---------- */
+  --glow-gold:     0 0 24px rgba(255, 217, 122, 0.45);
+  --glow-gold-lg:  0 0 36px rgba(255, 217, 122, 0.55), 0 0 80px rgba(255, 217, 122, 0.18);
+  --glow-ruby:     0 0 24px rgba(201, 84, 58, 0.45);
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--bg-deep);
+  color: var(--bone);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+* { box-sizing: border-box; }
+button { font-family: var(--font-body); -webkit-tap-highlight-color: transparent; }
+
+/* ---------- Reusable surfaces ---------- */
+.panel-wood {
+  background: var(--surface-wood-grain);
+  border: 1px solid var(--wood-light);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 217, 122, 0.18),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.55),
+    0 6px 16px rgba(0, 0, 0, 0.55);
+}
+
+/**
+ * "Brass-rail" header/footer bar: clean wood gradient with a single brass
+ * piping line on the edge that meets the playfield. No textures — they
+ * were producing visible repeating-line artefacts.
+ */
+.bar-rail {
+  position: relative;
+  background: linear-gradient(180deg, #2a1a0c 0%, #1a0f06 50%, #0a0604 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 217, 122, 0.18),
+    inset 0 -2px 8px rgba(0, 0, 0, 0.65),
+    0 8px 22px rgba(0, 0, 0, 0.55);
+}
+.bar-rail::before, .bar-rail::after {
+  /* Single brass piping line along the inside edge facing the playfield. */
+  content: none;
+  position: absolute;
+  left: 0; right: 0;
+  height: 2px;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg,
+      transparent 0%, var(--brass-deep) 12%,
+      var(--gold) 50%, var(--brass-deep) 88%, transparent 100%);
+}
+.bar-rail--top::after    { content: ''; bottom: 0; }
+.bar-rail--bottom::before { content: ''; top: 0; }
+
+.brass-frame {
+  border: 1px solid var(--brass);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 217, 122, 0.2),
+    inset 0 0 12px rgba(255, 217, 122, 0.06),
+    0 0 0 1px var(--brass-deep);
+}
+
+.title-engraved {
+  font-family: var(--font-brand);
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gold);
+  text-shadow:
+    0 1px 0 var(--wood-dark),
+    0 2px 0 #000,
+    0 0 18px rgba(255, 217, 122, 0.35);
+}
+
+/* Filigree divider — small decorative element */
+.filigree {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--brass);
+  opacity: 0.7;
+}
+.filigree::before, .filigree::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--brass) 50%, transparent);
+}
+
+/* Tabular numbers helper */
+.num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
