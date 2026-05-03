@@ -76,6 +76,7 @@ interface DisplayRow {
             <div class="special-text">
               <h3>The Hunter</h3>
               <p>Substitutes for any paying symbol to help complete a cluster. Cannot trigger free spins. Two clusters of different symbols can share the same Hunter.</p>
+              <p>Each Hunter that lands carries a <strong>×2</strong> or <strong>×5</strong> multiplier shown on its golden badge. When a Hunter is part of a winning cluster, its multiplier is applied to that cluster's payout. Multiple Hunters in the same cluster <strong>add</strong> their multipliers together.</p>
               <div class="example">
                 <span class="example-label">Example</span>
                 <div class="example-row">
@@ -84,7 +85,7 @@ interface DisplayRow {
                   <app-symbol-icon symbol="WILD" [size]="36"></app-symbol-icon>
                   <app-symbol-icon symbol="BEAR" [size]="36"></app-symbol-icon>
                   <span class="arrow">=</span>
-                  <span class="example-result">cluster of 4 Bears</span>
+                  <span class="example-result">4-Bear cluster · payout × Hunter's multiplier</span>
                 </div>
               </div>
             </div>

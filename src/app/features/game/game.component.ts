@@ -10,8 +10,7 @@ import {
   signal,
 } from '@angular/core';
 import { GameService } from '../../core/services/game.service';
-import { BetService } from '../../core/services/bet.service';
-import { SoundService } from '../../core/services/sound.service';
+import { BetService } from '../../shared/services/bet.service';
 import { BigWinCelebrationComponent } from './ui/big-win-celebration.component';
 import { BonusBuyModalComponent } from './ui/bonus-buy-modal.component';
 import { BonusIntroComponent } from './ui/bonus-intro.component';
@@ -113,7 +112,6 @@ export class GameComponent {
   @ViewChild('bonusIntro', { static: true }) private readonly bonusIntro!: BonusIntroComponent;
   @ViewChild('stage', { static: true }) private readonly stageEl!: ElementRef<HTMLElement>;
   protected readonly bet = inject(BetService);
-  private readonly sound = inject(SoundService);
 
   private busy = false;
   /** When set, per-step +X popups are skipped so the BigWin celebration alone announces the spin's total. */
@@ -252,6 +250,19 @@ export class GameComponent {
     if (!this.game.buyBonus(spinCount)) return;
     this.buyOpen.set(false);
     this.popup.clear();
+    // Show a "fake" trigger spin so the player sees scatters land on the
+    // board exactly the way they would on a natural FS trigger, instead of
+    // being yanked straight into the bonus intro. The cost was already
+    // debited inside `buyBonus()`; this spin pays nothing — purely visual.
+    if (!this.busy) {
+      this.busy = true;
+      try {
+        await this.pixi.play(this.game.makeBonusBuyVisualSpin());
+        await this.pixi.glowScatters();
+      } finally {
+        this.busy = false;
+      }
+    }
     await this.bonusIntro.play();
     void this.runFreeSpinChain();
   }
@@ -287,7 +298,6 @@ export class GameComponent {
     try {
       const result = this.game.spinOnce();
       if (!result) return;
-      this.sound.play('spin');
       this.popup.clear();
       const beforeAward = this.game.fsAwardCounter();
       // If this spin's total clears the BigWin floor, suppress the per-step
@@ -296,18 +306,14 @@ export class GameComponent {
       await this.pixi.play(result);
       this.suppressStepPopup.set(false);
       if (result.triggeredFreeSpins > 0) {
-        this.sound.play('scatterChime');
         await this.pixi.glowScatters();
       }
-      // Audio cue for the win that's about to be celebrated visually.
-      if (result.totalWin > 0) this.sound.playWinTier(result.totalWin, result.bet);
       // Big-win celebration runs BEFORE commitSpin so the FS-intro overlay
       // (which fires from commitSpin when scatters trigger) doesn't fight
       // for screen space with the celebration.
       await this.bigWin.play(result.totalWin, result.bet);
       this.game.commitSpin();
       if (this.game.fsAwardCounter() > beforeAward) {
-        this.sound.play('fsAward');
         await this.interruptibleWait(FS_AWARD_DELAY_MS);
       } else if (this.shouldSavor(result)) {
         await this.interruptibleWait(WIN_SAVOR_MS);
@@ -351,21 +357,17 @@ export class GameComponent {
         const beforeAward = this.game.fsAwardCounter();
         const result = this.game.spinOnce();
         if (!result) break;
-        this.sound.play('spin');
         this.popup.clear();
         this.suppressStepPopup.set(this.willCelebrate(result));
         await this.pixi.play(result);
         this.suppressStepPopup.set(false);
         if (result.triggeredFreeSpins > 0) {
-          this.sound.play('scatterChime');
           await this.pixi.glowScatters();
         }
-        if (result.totalWin > 0) this.sound.playWinTier(result.totalWin, result.bet);
         await this.bigWin.play(result.totalWin, result.bet);
         this.game.commitSpin();
         const retriggered = this.game.fsAwardCounter() > beforeAward;
         if (retriggered) {
-          this.sound.play('fsAward');
           await this.interruptibleWait(FS_AWARD_DELAY_MS);
         } else if (this.shouldSavor(result)) {
           await this.interruptibleWait(WIN_SAVOR_MS);

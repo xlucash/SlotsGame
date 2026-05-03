@@ -1,5 +1,5 @@
 import { clusterPayout } from './paytable';
-import { COLS, ROWS, MIN_CLUSTER, type Cluster, type Grid } from './types';
+import { COLS, ROWS, MIN_CLUSTER, type Cluster, type Grid, type WildMultGrid } from './types';
 import type { SymbolId } from './symbols';
 
 /**
@@ -10,8 +10,13 @@ import type { SymbolId } from './symbols';
  * Algorithm: for each non-WILD/non-SCATTER symbol type present, flood-fill through
  * cells of that symbol or WILD. A wild can belong to multiple clusters of different
  * symbols (standard cluster-pay behavior).
+ *
+ * `wilds` is a parallel grid of per-cell wild multipliers (0 if not wild).
+ * Any wild cell that ends up inside a cluster contributes its multiplier
+ * additively — the cluster's final payout is `basePayout × sumOfWildMults`,
+ * with `sumOfWildMults` defaulting to 1 when no wilds participate.
  */
-export function findClusters(grid: Grid, bet: number): Cluster[] {
+export function findClusters(grid: Grid, wilds: WildMultGrid, bet: number): Cluster[] {
   const clusters: Cluster[] = [];
 
   const payingSymbols = new Set<SymbolId>();
@@ -30,10 +35,17 @@ export function findClusters(grid: Grid, bet: number): Cluster[] {
         if (grid[c][r] !== target) continue;
         const cells = floodFill(grid, c, r, target, visited);
         if (cells.length >= MIN_CLUSTER) {
+          const base = clusterPayout(target, cells.length, bet);
+          let wildSum = 0;
+          for (const [cc, rr] of cells) {
+            if (grid[cc][rr] === 'WILD') wildSum += wilds[cc][rr] || 0;
+          }
+          const wildMultiplier = wildSum > 0 ? wildSum : 1;
           clusters.push({
             symbol: target,
             cells,
-            payout: clusterPayout(target, cells.length, bet),
+            payout: base * wildMultiplier,
+            wildMultiplier,
           });
         }
       }

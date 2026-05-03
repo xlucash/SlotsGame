@@ -1,17 +1,23 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Output, inject } from '@angular/core';
-import { BalanceService } from '../../../core/services/balance.service';
+import { RouterLink } from '@angular/router';
+import { BalanceService } from '../../../shared/services/balance.service';
 import { GameService } from '../../../core/services/game.service';
-import { SoundService } from '../../../core/services/sound.service';
-import { CounterComponent } from './counter.component';
-import { formatPLN } from './format';
+import { CounterComponent } from '../../../shared/ui/counter.component';
+import { formatPLN } from '../../../shared/util/format';
 
 @Component({
   selector: 'app-top-bar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CounterComponent],
+  imports: [CounterComponent, RouterLink],
   template: `
     <header class="top-bar bar-rail bar-rail--top">
+      <a class="lodge-btn" routerLink="/" aria-label="Back to Better Hunter's Lodge" title="Back to Better Hunter's Lodge">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path d="M3 12 L12 4 L21 12 M5 11 V20 H10 V14 H14 V20 H19 V11"
+                fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+        </svg>
+      </a>
       <div class="brand">
         <div class="emblem" aria-hidden="true">
           <svg viewBox="0 0 56 56" width="52" height="52">
@@ -46,22 +52,6 @@ import { formatPLN } from './format';
           <span class="tag">6 × 5 · cluster pays · min 4</span>
         </div>
       </div>
-
-      <button class="icon-btn mute-btn"
-              (click)="sound.toggleMute()"
-              [attr.aria-label]="sound.muted() ? 'Unmute' : 'Mute'">
-        @if (sound.muted()) {
-          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-            <path d="M3 10 V14 H7 L12 18 V6 L7 10 Z" fill="currentColor"/>
-            <path d="M15 9 L21 15 M21 9 L15 15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
-        } @else {
-          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-            <path d="M3 10 V14 H7 L12 18 V6 L7 10 Z" fill="currentColor"/>
-            <path d="M15 9 Q18 12 15 15 M17 7 Q22 12 17 17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-          </svg>
-        }
-      </button>
 
       <button class="icon-btn info-btn" (click)="openInfo.emit()" aria-label="Open paytable">
         <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
@@ -152,6 +142,23 @@ import { formatPLN } from './format';
       text-transform: uppercase;
     }
 
+    /* Lodge / home button */
+    .lodge-btn {
+      width: 38px; height: 38px;
+      border: 1px solid var(--brass);
+      background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.30) 100%);
+      color: var(--gold);
+      border-radius: 50%;
+      display: grid; place-items: center;
+      cursor: pointer;
+      transition: filter 0.12s, transform 0.12s, box-shadow 0.18s;
+      box-shadow: inset 0 1px 0 rgba(255,217,122,0.18);
+      text-decoration: none;
+      flex: 0 0 auto;
+    }
+    .lodge-btn:hover { filter: brightness(1.25); transform: translateY(-1px); box-shadow: 0 0 18px rgba(255,217,122,0.25); }
+    .lodge-btn:active { transform: translateY(0); }
+
     /* Round icon buttons (mute, info) */
     .icon-btn {
       width: 38px; height: 38px;
@@ -166,8 +173,7 @@ import { formatPLN } from './format';
     }
     .icon-btn:hover { filter: brightness(1.25); transform: translateY(-1px); box-shadow: 0 0 18px rgba(255,217,122,0.25); }
     .icon-btn:active { transform: translateY(0); }
-    .mute-btn { margin-left: auto; }
-    .info-btn { margin-left: 8px; }
+    .info-btn { margin-left: auto; }
     .icon-btn + .balance,
     .fs-stats + .icon-btn + .balance,
     .fs-stats + .balance { margin-left: 0; }
@@ -216,7 +222,6 @@ import { formatPLN } from './format';
 export class TopBarComponent {
   protected readonly balance = inject(BalanceService);
   protected readonly game = inject(GameService);
-  protected readonly sound = inject(SoundService);
   protected readonly formatPLN = formatPLN;
 
   @Output() readonly openInfo = new EventEmitter<void>();

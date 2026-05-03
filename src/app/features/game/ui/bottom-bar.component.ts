@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, computed, inject, signal } from '@angular/core';
-import { BalanceService } from '../../../core/services/balance.service';
-import { BetService } from '../../../core/services/bet.service';
+import { BalanceService } from '../../../shared/services/balance.service';
+import { BetService } from '../../../shared/services/bet.service';
 import { GameService } from '../../../core/services/game.service';
-import { CounterComponent } from './counter.component';
-import { formatPLN } from './format';
+import { CounterComponent } from '../../../shared/ui/counter.component';
+import { formatPLN } from '../../../shared/util/format';
 
 const AUTO_PRESETS: readonly number[] = [10, 25, 50, 100, 250];
 

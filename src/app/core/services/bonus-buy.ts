@@ -1,4 +1,4 @@
-import type { Rng } from '../math/rng';
+import type { Rng } from '../../shared/math/rng';
 
 /**
  * Cost of a bonus buy in × current bet. Tuned so buy RTP sits in ~92–95%

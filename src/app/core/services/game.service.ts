@@ -1,9 +1,10 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { spin } from '../math/engine';
-import { MathRng } from '../math/rng';
+import { makeBonusBuyTriggerSpin, spin } from '../math/engine';
+import { FREE_SPINS_TRIGGER_COUNT } from '../math/paytable';
+import { MathRng } from '../../shared/math/rng';
 import type { SpinResult } from '../math/types';
-import { BalanceService } from './balance.service';
-import { BetService } from './bet.service';
+import { BalanceService } from '../../shared/services/balance.service';
+import { BetService } from '../../shared/services/bet.service';
 import { BONUS_BUY_COST_MULT, BONUS_STARTING_MULTIPLIER } from './bonus-buy';
 
 export type GamePhase = 'idle' | 'spinning' | 'fs-intro' | 'fs-spinning' | 'fs-outro';
@@ -72,6 +73,22 @@ export class GameService {
     this._freeSpinsLeft.set(spinCount);
     this._phase.set('fs-spinning');
     return true;
+  }
+
+  /**
+   * Build a visual-only spin result that lands `FREE_SPINS_TRIGGER_COUNT`
+   * scatters on the board. Used by the bonus-buy flow to show a fake
+   * trigger animation instead of teleporting the player into the bonus
+   * intro the moment they confirm the buy. Pays nothing — cost was
+   * already debited by `buyBonus()`.
+   */
+  makeBonusBuyVisualSpin(): SpinResult {
+    return makeBonusBuyTriggerSpin({
+      bet: this.bet.amount(),
+      rng: this.rng,
+      scattersCount: FREE_SPINS_TRIGGER_COUNT,
+      freeSpinsAwarded: this._freeSpinsLeft(),
+    });
   }
 
   /**

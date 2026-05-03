@@ -8,8 +8,9 @@ import {
   signal,
 } from '@angular/core';
 import { Application } from 'pixi.js';
-import { COLS, ROWS, type Grid, type SpinResult } from '../../../core/math/types';
-import { MathRng, pickSymbol } from '../../../core/math/rng';
+import { COLS, ROWS, type Grid, type SpinResult, type WildMultGrid } from '../../../core/math/types';
+import { MathRng } from '../../../shared/math/rng';
+import { pickSymbol, pickWildMultiplier } from '../../../core/math/symbols';
 import type { SymbolId } from '../../../core/math/symbols';
 import { GridRenderer } from './grid-renderer';
 import { BackgroundScene } from './background-scene';
@@ -73,7 +74,10 @@ export class PixiGameComponent implements AfterViewInit, OnDestroy {
     // First paint fix-up — re-run on the next frame after styles settle.
     requestAnimationFrame(() => this.handleResize());
 
-    renderer.showGrid(makePreviewGrid());
+    {
+      const { grid, wilds } = makePreviewGrid();
+      renderer.showGrid(grid, wilds);
+    }
     this.ready.set(true);
     this.gridRect.set(renderer.getGridRect());
   }
@@ -112,13 +116,20 @@ export class PixiGameComponent implements AfterViewInit, OnDestroy {
   }
 }
 
-function makePreviewGrid(): Grid {
+function makePreviewGrid(): { grid: Grid; wilds: WildMultGrid } {
   const rng = new MathRng();
-  const g: Grid = [];
+  const grid: Grid = [];
+  const wilds: WildMultGrid = [];
   for (let c = 0; c < COLS; c++) {
-    const col: SymbolId[] = [];
-    for (let r = 0; r < ROWS; r++) col.push(pickSymbol(rng));
-    g.push(col);
+    const colSyms: SymbolId[] = [];
+    const colMults: number[] = [];
+    for (let r = 0; r < ROWS; r++) {
+      const sym = pickSymbol(rng);
+      colSyms.push(sym);
+      colMults.push(sym === 'WILD' ? pickWildMultiplier(rng) : 0);
+    }
+    grid.push(colSyms);
+    wilds.push(colMults);
   }
-  return g;
+  return { grid, wilds };
 }

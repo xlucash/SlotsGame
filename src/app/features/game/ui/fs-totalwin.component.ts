@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { GameService } from '../../../core/services/game.service';
-import { CounterComponent } from './counter.component';
+import { CounterComponent } from '../../../shared/ui/counter.component';
 
 /**
  * "Total win" bar pinned beneath the grid while in free spins. Tallies the

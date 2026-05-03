@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Output, ViewChild, inject, signal } from '@angular/core';
-import { BalanceService } from '../../../core/services/balance.service';
-import { BetService } from '../../../core/services/bet.service';
+import { BalanceService } from '../../../shared/services/balance.service';
+import { BetService } from '../../../shared/services/bet.service';
 import { GameService } from '../../../core/services/game.service';
 import { BONUS_BUY_COST_MULT, DEFAULT_BONUS_SPINS, WHEEL_OUTCOMES } from '../../../core/services/bonus-buy';
 import { FortuneWheelComponent } from './fortune-wheel.component';
-import { formatPLN } from './format';
+import { formatPLN } from '../../../shared/util/format';
 
 type View = 'choose' | 'wheel';
 

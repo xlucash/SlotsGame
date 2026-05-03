@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Output, computed, inject } from '@angular/core';
-import { BetService } from '../../../core/services/bet.service';
+import { BetService } from '../../../shared/services/bet.service';
 import { GameService } from '../../../core/services/game.service';
 import { BONUS_BUY_COST_MULT } from '../../../core/services/bonus-buy';
-import { formatPLN } from './format';
+import { formatPLN } from '../../../shared/util/format';
 
 /**
  * Vertical "BUY BONUS" pill that floats to the left of the grid while in the

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MathRng } from './rng';
+import { MathRng } from '../../shared/math/rng';
 import { simulateSession } from './rtp-simulator';
 
 describe('RTP', () => {

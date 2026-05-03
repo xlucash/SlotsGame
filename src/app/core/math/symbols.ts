@@ -42,6 +42,10 @@ export const SYMBOLS: Record<SymbolId, SymbolMeta> = {
  * Weighted distribution used when generating new symbols.
  * Higher weight = more frequent. Tuned so high-pays and wilds/scatters are rare.
  * SCATTER weight is calibrated to land FS at roughly 1/180 spins.
+ *
+ * NOTE on WILD weight: wilds now carry an extra ×2 / ×5 multiplier that
+ * is applied to clusters they belong to. The weight is tuned together with
+ * WILD_MULTIPLIER_WEIGHTS to keep base RTP inside the 85–98% test band.
  */
 export const SYMBOL_WEIGHTS: Record<SymbolId, number> = {
   BULLET: 16,
@@ -53,6 +57,33 @@ export const SYMBOL_WEIGHTS: Record<SymbolId, number> = {
   BOAR: 7,
   WOLF: 5,
   BEAR: 3,
-  WILD: 1.5,
+  WILD: 0.55,
   SCATTER: 2.4,
 };
+
+/**
+ * Distribution of multiplier values carried by each wild that lands.
+ * ×2 is the common case; ×5 is the rare upgrade. Average ≈ 2.6×.
+ */
+export const WILD_MULTIPLIER_WEIGHTS: ReadonlyArray<readonly [number, number]> = [
+  [2, 80],
+  [5, 20],
+];
+
+import { pickWeighted, type Rng } from '../../shared/math/rng';
+
+const ENTRIES: ReadonlyArray<readonly [SymbolId, number]> =
+  Object.entries(SYMBOL_WEIGHTS) as Array<[SymbolId, number]>;
+const TOTAL_WEIGHT = ENTRIES.reduce((s, [, w]) => s + w, 0);
+
+const WILD_MULT_TOTAL = WILD_MULTIPLIER_WEIGHTS.reduce((s, [, w]) => s + w, 0);
+
+/** Pick a Hunter's-Cluster symbol weighted by SYMBOL_WEIGHTS. */
+export function pickSymbol(rng: Rng): SymbolId {
+  return pickWeighted(rng, ENTRIES, TOTAL_WEIGHT);
+}
+
+/** Pick a multiplier value for a freshly-landed wild. */
+export function pickWildMultiplier(rng: Rng): number {
+  return pickWeighted(rng, WILD_MULTIPLIER_WEIGHTS, WILD_MULT_TOTAL);
+}

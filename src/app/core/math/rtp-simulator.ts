@@ -1,5 +1,5 @@
 import { spin } from './engine';
-import type { Rng } from './rng';
+import type { Rng } from '../../shared/math/rng';
 import { FREE_SPINS_RETRIGGER_COUNT } from './paytable';
 
 export interface SessionStats {

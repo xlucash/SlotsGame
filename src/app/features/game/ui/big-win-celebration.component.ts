@@ -6,7 +6,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { CounterComponent } from './counter.component';
+import { CounterComponent } from '../../../shared/ui/counter.component';
 
 interface Tier {
   readonly id: string;

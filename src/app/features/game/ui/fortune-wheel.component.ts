@@ -6,12 +6,10 @@ import {
   EventEmitter,
   Output,
   ViewChild,
-  inject,
   signal,
 } from '@angular/core';
-import { MathRng } from '../../../core/math/rng';
+import { MathRng } from '../../../shared/math/rng';
 import { WHEEL_OUTCOMES, pickWheelOutcome } from '../../../core/services/bonus-buy';
-import { SoundService } from '../../../core/services/sound.service';
 
 /**
  * SVG fortune wheel for the bonus-buy gamble. Renders one slice per WHEEL_OUTCOME
@@ -137,7 +135,6 @@ export class FortuneWheelComponent implements AfterViewInit {
   private settleTimer: ReturnType<typeof setTimeout> | null = null;
   private pendingOutcome: { spins: number; weight: number } | null = null;
   private tickTimers: ReturnType<typeof setTimeout>[] = [];
-  private readonly sound = inject(SoundService);
 
   ngAfterViewInit(): void {
     // Force browser reflow so any subsequent transition kicks in cleanly.
@@ -170,7 +167,6 @@ export class FortuneWheelComponent implements AfterViewInit {
     const outcome = this.pendingOutcome;
     this.pendingOutcome = null;
     this.spinning = false;
-    this.sound.play('wheelLand');
     this.resultSpins.set(outcome.spins);
     this.resultShown.set(true);
     this.settled.emit(outcome.spins);
@@ -194,22 +190,10 @@ export class FortuneWheelComponent implements AfterViewInit {
     this.transition.set('transform 4.2s cubic-bezier(0.18, 0.7, 0.18, 1)');
     this.rotation.set(finalRotation);
 
-    // Schedule click ticks roughly tracking the ease-out — fast at first,
-    // slowing as the wheel approaches its target.
-    const TICKS = 28;
-    const TOTAL = 4200;
-    for (let i = 0; i < TICKS; i++) {
-      const t = i / (TICKS - 1);
-      const eased = 1 - Math.pow(1 - t, 3); // matches the css cubic-bezier closely
-      const delay = eased * TOTAL;
-      this.tickTimers.push(setTimeout(() => this.sound.play('wheelTick'), delay));
-    }
-
     this.settleTimer = setTimeout(() => {
       this.settleTimer = null;
       this.pendingOutcome = null;
       this.tickTimers = [];
-      this.sound.play('wheelLand');
       this.resultSpins.set(outcome.spins);
       this.resultShown.set(true);
       this.spinning = false;

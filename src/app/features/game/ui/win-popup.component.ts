@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
-import { formatPlain } from './format';
+import { formatPlain } from '../../../shared/util/format';
 
 const AUTO_DISMISS_MS = 3000;
 

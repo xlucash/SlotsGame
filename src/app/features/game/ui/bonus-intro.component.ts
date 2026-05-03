@@ -7,8 +7,6 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { SoundService } from '../../../core/services/sound.service';
-
 type Phase =
   | 'idle'
   | 'fadeIn'    // overlay appearing
@@ -371,7 +369,6 @@ export class BonusIntroComponent {
   @ViewChild('host') private hostRef?: ElementRef<HTMLElement>;
 
   private readonly destroyRef = inject(DestroyRef);
-  private readonly sound = inject(SoundService);
   private destroyed = false;
   private rafId: number | null = null;
   private currentX = 0.5;
@@ -422,7 +419,6 @@ export class BonusIntroComponent {
     if (this.destroyed) return;
 
     this.phase.set('firing');
-    this.sound.play('gunshot');
     await wait(180);
     if (this.destroyed) return;
 

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Output, inject } from '@angular/core';
 import { GameService } from '../../../core/services/game.service';
-import { CounterComponent } from './counter.component';
+import { CounterComponent } from '../../../shared/ui/counter.component';
 
 @Component({
   selector: 'app-fs-overlay',

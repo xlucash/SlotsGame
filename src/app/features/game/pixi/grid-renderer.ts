@@ -1,7 +1,7 @@
 import gsap from 'gsap';
 import { Application, Container, Graphics } from 'pixi.js';
 import { GlowFilter } from 'pixi-filters';
-import { COLS, ROWS, type Grid, type SpinResult, type TumbleStep } from '../../../core/math/types';
+import { COLS, ROWS, type Grid, type SpinResult, type TumbleStep, type WildMultGrid } from '../../../core/math/types';
 import { CELL_GAP, CELL_SIZE, SymbolSprite } from './symbol-sprite';
 import { paletteFor } from './symbol-art';
 import { ParticleBurst } from './particle-burst';
@@ -97,13 +97,14 @@ export class GridRenderer {
 
   setCallbacks(cb: GridCallbacks): void { this.callbacks = cb; }
 
-  showGrid(grid: Grid): void {
+  showGrid(grid: Grid, wilds?: WildMultGrid): void {
     this.cellsLayer.removeChildren();
     this.sprites = [];
     for (let c = 0; c < COLS; c++) {
       const col: SymbolSprite[] = [];
       for (let r = 0; r < ROWS; r++) {
-        const sprite = new SymbolSprite(grid[c][r]);
+        const mult = wilds?.[c]?.[r] ?? 0;
+        const sprite = new SymbolSprite(grid[c][r], mult);
         sprite.position.set(this.cellX(c), this.cellY(r));
         this.cellsLayer.addChild(sprite);
         col.push(sprite);
@@ -129,8 +130,8 @@ export class GridRenderer {
 
   async playSpin(result: SpinResult): Promise<void> {
     this.fastForwardRequested = false;
-    if (this.fastForwardRequested) this.applyGridInstant(result.initialGrid);
-    else await this.animateInitialDrop(result.initialGrid);
+    if (this.fastForwardRequested) this.applyGridInstant(result.initialGrid, result.initialWilds);
+    else await this.animateInitialDrop(result.initialGrid, result.initialWilds);
 
     for (const step of result.steps) {
       if (this.fastForwardRequested) this.applyStepInstant(step);
@@ -224,13 +225,13 @@ export class GridRenderer {
     });
   }
 
-  private async animateInitialDrop(grid: Grid): Promise<void> {
-    if (this.sprites.length !== COLS) this.showGrid(grid);
+  private async animateInitialDrop(grid: Grid, wilds: WildMultGrid): Promise<void> {
+    if (this.sprites.length !== COLS) this.showGrid(grid, wilds);
     const tweens: Promise<unknown>[] = [];
     for (let c = 0; c < COLS; c++) {
       for (let r = 0; r < ROWS; r++) {
         const sprite = this.sprites[c][r];
-        sprite.setSymbol(grid[c][r]);
+        sprite.setSymbol(grid[c][r], wilds[c][r] || 0);
         sprite.setHighlighted(false);
         sprite.filters = [];
         const targetY = this.cellY(r);
@@ -242,6 +243,14 @@ export class GridRenderer {
           duration: 0.55,
           ease: 'back.out(1.4)',
           delay: c * 0.05 + r * 0.02,
+          onComplete: () => {
+            // After the initial drop, kick a pulse on every freshly-landed
+            // wild so its golden ×N badge announces itself before any
+            // potential cluster forms around it.
+            if (sprite.symbol === 'WILD' && sprite.wildMultiplier > 0) {
+              sprite.pulseWildOverlay();
+            }
+          },
         }));
       }
     }
@@ -256,13 +265,18 @@ export class GridRenderer {
       for (const [c, r] of cl.cells) winning.add(`${c},${r}`);
     }
 
-    // Apply highlight + glow filter to winning sprites.
+    // Apply highlight + glow filter to winning sprites. Any wild that lands
+    // inside a winning cluster gets its overlay pulsed so the player sees
+    // the multiplier value flare just before the cluster collapses.
     for (let c = 0; c < COLS; c++) {
       for (let r = 0; r < ROWS; r++) {
         const sprite = this.sprites[c][r];
         const hit = winning.has(`${c},${r}`);
         sprite.setHighlighted(hit);
         sprite.filters = hit ? [this.winFilter] : [];
+        if (hit && sprite.symbol === 'WILD' && sprite.wildMultiplier > 0) {
+          sprite.pulseWildOverlay();
+        }
       }
     }
 
@@ -319,7 +333,7 @@ export class GridRenderer {
       this.applyStepInstantTail(step, winning);
       return;
     }
-    await this.applyTumble(step.gridAfter, winning);
+    await this.applyTumble(step.gridAfter, step.wildsAfter, winning);
 
     // Clear filters/highlights for next step.
     for (let c = 0; c < COLS; c++) {
@@ -331,8 +345,13 @@ export class GridRenderer {
     }
   }
 
-  private async applyTumble(nextGrid: Grid, removed: Set<string>): Promise<void> {
+  private async applyTumble(
+    nextGrid: Grid,
+    nextWilds: WildMultGrid,
+    removed: Set<string>,
+  ): Promise<void> {
     const tweens: Promise<unknown>[] = [];
+    const newWildSprites: SymbolSprite[] = [];
     for (let c = 0; c < COLS; c++) {
       const survivorSprites: SymbolSprite[] = [];
       const newSprites: SymbolSprite[] = [];
@@ -346,7 +365,7 @@ export class GridRenderer {
       const newCount = ROWS - survivorSprites.length;
       for (let r = 0; r < newCount; r++) {
         const sprite = newSprites[r];
-        sprite.setSymbol(nextGrid[c][r]);
+        sprite.setSymbol(nextGrid[c][r], nextWilds[c][r] || 0);
         // Recycled winning sprites must shed their highlight before re-use,
         // otherwise the halo flashes on a fresh drop-in.
         sprite.setHighlighted(false);
@@ -355,10 +374,13 @@ export class GridRenderer {
         sprite.filters = [];
         sprite.position.set(this.cellX(c), -CELL_SIZE - (newCount - r + 1) * (CELL_SIZE + CELL_GAP));
         newColumn.push(sprite);
+        if (sprite.symbol === 'WILD' && sprite.wildMultiplier > 0) {
+          newWildSprites.push(sprite);
+        }
       }
       for (let r = newCount; r < ROWS; r++) {
         const sprite = survivorSprites[r - newCount];
-        sprite.setSymbol(nextGrid[c][r]);
+        sprite.setSymbol(nextGrid[c][r], nextWilds[c][r] || 0);
         newColumn.push(sprite);
       }
 
@@ -376,15 +398,16 @@ export class GridRenderer {
       }
     }
     await Promise.all(tweens);
+    for (const w of newWildSprites) w.pulseWildOverlay();
   }
 
   /** Snap the grid to a state with no animation. Used during fast-forward. */
-  private applyGridInstant(grid: Grid): void {
-    if (this.sprites.length !== COLS) this.showGrid(grid);
+  private applyGridInstant(grid: Grid, wilds?: WildMultGrid): void {
+    if (this.sprites.length !== COLS) this.showGrid(grid, wilds);
     for (let c = 0; c < COLS; c++) {
       for (let r = 0; r < ROWS; r++) {
         const sprite = this.sprites[c][r];
-        sprite.setSymbol(grid[c][r]);
+        sprite.setSymbol(grid[c][r], wilds?.[c]?.[r] ?? 0);
         sprite.setHighlighted(false);
         sprite.filters = [];
         sprite.alpha = 1;
@@ -396,14 +419,14 @@ export class GridRenderer {
 
   /** Resolve a step's tail-half (pop + tumble) instantly. */
   private applyStepInstantTail(step: TumbleStep, _winning: Set<string>): void {
-    this.applyGridInstant(step.gridAfter);
+    this.applyGridInstant(step.gridAfter, step.wildsAfter);
   }
 
   /** Resolve a step in full instantly: emit win, snap to gridAfter. */
   private applyStepInstant(step: TumbleStep): void {
     if (step.clusters.length === 0) return;
     this.callbacks.onStepWin?.(step.stepWin, step.multiplier);
-    this.applyGridInstant(step.gridAfter);
+    this.applyGridInstant(step.gridAfter, step.wildsAfter);
   }
 
   private cellX(c: number): number { return c * (CELL_SIZE + CELL_GAP); }

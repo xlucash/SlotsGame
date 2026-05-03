@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { spin } from './engine';
-import { MathRng } from './rng';
+import { MathRng } from '../../shared/math/rng';
 import { findClusters } from './cluster-detection';
 import type { Grid } from './types';
 
@@ -18,7 +18,8 @@ describe('engine', () => {
     const grid: Grid = Array.from({ length: 6 }, () => ['BULLET', 'BULLET', 'BULLET', 'BULLET', 'BULLET']);
     // Make every cell in row 0 a BEAR (4+ across columns).
     for (let c = 0; c < 6; c++) grid[c][0] = 'BEAR';
-    const clusters = findClusters(grid, 1);
+    const wilds = Array.from({ length: 6 }, () => new Array(5).fill(0));
+    const clusters = findClusters(grid, wilds, 1);
     expect(clusters.find((c) => c.symbol === 'BEAR')).toBeDefined();
     expect(clusters.find((c) => c.symbol === 'BEAR')!.cells.length).toBe(6);
     // BULLET runs across all columns at rows 1..4 = 24 cells, one big cluster.

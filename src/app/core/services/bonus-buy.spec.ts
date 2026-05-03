@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MathRng } from '../math/rng';
+import { MathRng } from '../../shared/math/rng';
 import { simulateBuyRtp } from '../math/rtp-simulator';
 import {
   BONUS_BUY_COST_MULT,
