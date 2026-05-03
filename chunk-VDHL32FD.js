@@ -1,1 +1,0 @@
-import{B as a,f as o}from"./chunk-6AFXSK2Z.js";var t=class extends a{constructor(e){super(e),this.uploadMethodId="image",this.autoGarbageCollect=!0}static test(e){return globalThis.HTMLImageElement&&e instanceof HTMLImageElement||typeof ImageBitmap<"u"&&e instanceof ImageBitmap||globalThis.VideoFrame&&e instanceof VideoFrame}};t.extension=o.TextureSource;export{t as a};
