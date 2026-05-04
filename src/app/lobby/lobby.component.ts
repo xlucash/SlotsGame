@@ -250,7 +250,7 @@ const GAMES: readonly GameCard[] = [
       <app-leaderboard></app-leaderboard>
 
       <footer class="lodge-foot">
-        <span>10 000 PLN starting balance · refresh resets the session</span>
+        <span>8 000 PLN starting balance · refresh resets the session</span>
       </footer>
     </div>
   `,

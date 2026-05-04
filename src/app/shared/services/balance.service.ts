@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 
-export const STARTING_BALANCE = 10_000;
+export const STARTING_BALANCE = 8_000;
 
 /**
  * In-memory player balance. Refreshing the page = new session = balance reset.
