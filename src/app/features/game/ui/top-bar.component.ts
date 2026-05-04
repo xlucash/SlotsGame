@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Output, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BalanceService } from '../../../shared/services/balance.service';
 import { GameService } from '../../../core/services/game.service';
@@ -15,8 +15,9 @@ import { formatPLN } from '../../../shared/util/format';
       <a class="lodge-btn" routerLink="/" aria-label="Back to Better Hunter's Lodge" title="Back to Better Hunter's Lodge">
         <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
           <path d="M3 12 L12 4 L21 12 M5 11 V20 H10 V14 H14 V20 H19 V11"
-                fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
         </svg>
+        <span class="lodge-label">LODGE</span>
       </a>
       <div class="brand">
         <div class="emblem" aria-hidden="true">
@@ -52,13 +53,6 @@ import { formatPLN } from '../../../shared/util/format';
           <span class="tag">6 × 5 · cluster pays · min 4</span>
         </div>
       </div>
-
-      <button class="icon-btn info-btn" (click)="openInfo.emit()" aria-label="Open paytable">
-        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-          <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.6"/>
-          <text x="12" y="16.5" text-anchor="middle" font-family="Cinzel" font-weight="900" font-size="13" fill="currentColor">i</text>
-        </svg>
-      </button>
 
       <div class="balance">
         <div class="coin" aria-hidden="true">
@@ -142,41 +136,33 @@ import { formatPLN } from '../../../shared/util/format';
       text-transform: uppercase;
     }
 
-    /* Lodge / home button */
+    /* Prominent labeled "Lodge" pill — players were missing the icon-only
+       version. Pulses subtly so it reads as interactive without being
+       loud enough to compete with the spin button. */
     .lodge-btn {
-      width: 38px; height: 38px;
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 16px;
       border: 1px solid var(--brass);
-      background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.30) 100%);
+      background: linear-gradient(180deg, rgba(255,217,122,.18), rgba(0,0,0,.35));
       color: var(--gold);
-      border-radius: 50%;
-      display: grid; place-items: center;
+      border-radius: 999px;
       cursor: pointer;
-      transition: filter 0.12s, transform 0.12s, box-shadow 0.18s;
-      box-shadow: inset 0 1px 0 rgba(255,217,122,0.18);
-      text-decoration: none;
-      flex: 0 0 auto;
+      text-decoration: none; flex: 0 0 auto;
+      font-family: var(--font-brand); font-weight: 900;
+      letter-spacing: 1.6px;
+      box-shadow: inset 0 1px 0 rgba(255,217,122,.3), 0 4px 14px rgba(255,217,122,.18);
+      animation: lodgeBreathe 3.6s ease-in-out infinite;
+      transition: filter .12s, transform .12s, box-shadow .18s;
     }
-    .lodge-btn:hover { filter: brightness(1.25); transform: translateY(-1px); box-shadow: 0 0 18px rgba(255,217,122,0.25); }
+    .lodge-btn:hover { filter: brightness(1.18); transform: translateY(-1px); box-shadow: 0 0 22px rgba(255,217,122,.5); }
     .lodge-btn:active { transform: translateY(0); }
-
-    /* Round icon buttons (mute, info) */
-    .icon-btn {
-      width: 38px; height: 38px;
-      border: 1px solid var(--brass);
-      background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.30) 100%);
-      color: var(--gold);
-      border-radius: 50%;
-      cursor: pointer;
-      display: grid; place-items: center;
-      transition: filter 0.12s, transform 0.12s, box-shadow 0.18s;
-      box-shadow: inset 0 1px 0 rgba(255,217,122,0.18);
+    .lodge-btn .lodge-label { font-size: 11px; }
+    @keyframes lodgeBreathe {
+      0%, 100% { box-shadow: inset 0 1px 0 rgba(255,217,122,.3), 0 4px 14px rgba(255,217,122,.18); }
+      50% { box-shadow: inset 0 1px 0 rgba(255,217,122,.5), 0 0 22px rgba(255,217,122,.45); }
     }
-    .icon-btn:hover { filter: brightness(1.25); transform: translateY(-1px); box-shadow: 0 0 18px rgba(255,217,122,0.25); }
-    .icon-btn:active { transform: translateY(0); }
-    .info-btn { margin-left: auto; }
-    .icon-btn + .balance,
-    .fs-stats + .icon-btn + .balance,
-    .fs-stats + .balance { margin-left: 0; }
+
+    .balance { margin-left: auto; }
 
     /* Balance widget */
     .balance {
@@ -223,6 +209,4 @@ export class TopBarComponent {
   protected readonly balance = inject(BalanceService);
   protected readonly game = inject(GameService);
   protected readonly formatPLN = formatPLN;
-
-  @Output() readonly openInfo = new EventEmitter<void>();
 }

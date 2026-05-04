@@ -20,6 +20,11 @@ pnpm-debug.log*
 !.env.example
 *.local
 
+# Local Firebase env file — generated from secrets in CI, hand-rolled
+# locally. Template at src/environments/environment.template.ts is the
+# committed source-of-shape.
+/src/environments/environment.ts
+
 # Angular cache
 /.angular
 

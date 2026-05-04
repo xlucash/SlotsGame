@@ -152,3 +152,17 @@ button { font-family: var(--font-body); -webkit-tap-highlight-color: transparent
 
 /* Tabular numbers helper */
 .num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+
+/**
+ * Per-game theming for the shared in-game leaderboard panel. The component
+ * itself reads the --lb-accent / --lb-accent-* variables; we set them
+ * here on a host class so the panel reads as gold inside Hunter's Cluster
+ * (default) and ice-blue inside Yeti's Pass without needing two separate
+ * components.
+ */
+app-leaderboard-panel.yeti-themed {
+  --lb-accent: #9ad6e8;
+  --lb-accent-soft: rgba(154, 214, 232, 0.5);
+  --lb-accent-glow: rgba(154, 214, 232, 0.35);
+  --lb-accent-fill: rgba(154, 214, 232, 0.10);
+}

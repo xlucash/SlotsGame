@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { LeaderboardComponent } from '../shared/ui/leaderboard.component';
 
 interface GameCard {
   readonly title: string;
@@ -37,7 +38,7 @@ const GAMES: readonly GameCard[] = [
   selector: 'app-lobby',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, LeaderboardComponent],
   template: `
     <div class="lodge">
       <header class="lodge-head">
@@ -245,6 +246,8 @@ const GAMES: readonly GameCard[] = [
           </a>
         }
       </div>
+
+      <app-leaderboard></app-leaderboard>
 
       <footer class="lodge-foot">
         <span>10 000 PLN starting balance · refresh resets the session</span>

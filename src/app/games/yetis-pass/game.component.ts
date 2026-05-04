@@ -23,6 +23,7 @@ import { YetiBigWinCelebrationComponent } from './ui/big-win-celebration.compone
 import { YetiFsInfoPanelComponent } from './ui/fs-info-panel.component';
 import { YetiFsTotalwinComponent } from './ui/fs-totalwin.component';
 import { YetiSideBuyButtonComponent } from './ui/side-buy-button.component';
+import { LeaderboardPanelComponent } from '../../shared/ui/leaderboard-panel.component';
 
 const AUTO_PRESETS: readonly number[] = [10, 25, 50, 100, 250];
 
@@ -41,6 +42,7 @@ const AUTO_PRESETS: readonly number[] = [10, 25, 50, 100, 250];
     YetiFsInfoPanelComponent,
     YetiFsTotalwinComponent,
     YetiSideBuyButtonComponent,
+    LeaderboardPanelComponent,
   ],
   template: `
     <div class="shell">
@@ -48,17 +50,14 @@ const AUTO_PRESETS: readonly number[] = [10, 25, 50, 100, 250];
         <a class="lodge-btn" routerLink="/" aria-label="Back to Better Hunter's Lodge" title="Back to Better Hunter's Lodge">
           <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
             <path d="M3 12 L12 4 L21 12 M5 11 V20 H10 V14 H14 V20 H19 V11"
-                  fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                  fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
           </svg>
+          <span class="lodge-label">LODGE</span>
         </a>
         <div class="brand">
           <strong class="title">Yeti's Pass</strong>
           <span class="tag">5 × 5 · 25 paylines · expanding wilds up to 250×</span>
         </div>
-
-        <button class="icon-btn" (click)="paytableOpen.set(true)" aria-label="Open paytable">
-          <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.6"/><text x="12" y="16.5" text-anchor="middle" font-family="Cinzel" font-weight="900" font-size="13" fill="currentColor">i</text></svg>
-        </button>
 
         <div class="balance">
           <span class="lbl">Balance</span>
@@ -71,7 +70,10 @@ const AUTO_PRESETS: readonly number[] = [10, 25, 50, 100, 250];
 
       <main class="stage" #stage (click)="onStageClick()">
         <app-yeti-pixi-game #pixi></app-yeti-pixi-game>
-        <app-yeti-side-buy-button (open)="buyOpen.set(true)"></app-yeti-side-buy-button>
+        <app-yeti-side-buy-button
+          (open)="buyOpen.set(true)"
+          (info)="paytableOpen.set(true)">
+        </app-yeti-side-buy-button>
         <app-yeti-fs-info-panel></app-yeti-fs-info-panel>
         <app-yeti-fs-totalwin></app-yeti-fs-totalwin>
       </main>
@@ -180,6 +182,7 @@ const AUTO_PRESETS: readonly number[] = [10, 25, 50, 100, 250];
       }
       <app-yeti-bonus-intro #bonusIntro></app-yeti-bonus-intro>
       <app-yeti-big-win-celebration #bigWin></app-yeti-big-win-celebration>
+      <app-leaderboard-panel game="yeti" class="yeti-themed"></app-leaderboard-panel>
     </div>
   `,
   styles: [`
@@ -204,18 +207,29 @@ const AUTO_PRESETS: readonly number[] = [10, 25, 50, 100, 250];
     }
     .top-bar::after { bottom: 0; }
     .bottom-bar::before { top: 0; }
-    .lodge-btn, .icon-btn {
-      width: 38px; height: 38px;
-      display: grid; place-items: center;
+    /* Prominent labeled "Lodge" pill in the Yeti ice-blue palette — the
+       brand colour inside this game, so the home button reads as native
+       to the page rather than borrowed from Hunter's Cluster. */
+    .lodge-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 16px;
       border: 1px solid #9ad6e8;
-      background: linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.3));
+      background: linear-gradient(180deg, rgba(154,214,232,.18), rgba(0,0,0,.35));
       color: #9ad6e8;
-      border-radius: 50%;
+      border-radius: 999px;
       text-decoration: none; cursor: pointer;
+      font-family: var(--font-brand); font-weight: 900;
+      letter-spacing: 1.6px;
+      box-shadow: inset 0 1px 0 rgba(154,214,232,.3), 0 4px 14px rgba(154,214,232,.18);
+      animation: lodgeBreathe 3.6s ease-in-out infinite;
       transition: filter .12s, transform .12s, box-shadow .18s;
     }
-    .lodge-btn:hover, .icon-btn:hover { filter: brightness(1.25); transform: translateY(-1px); box-shadow: 0 0 18px rgba(154,214,232,.35); }
-    .icon-btn { margin-left: auto; }
+    .lodge-btn:hover { filter: brightness(1.18); transform: translateY(-1px); box-shadow: 0 0 22px rgba(154,214,232,.5); }
+    .lodge-btn .lodge-label { font-size: 11px; }
+    @keyframes lodgeBreathe {
+      0%, 100% { box-shadow: inset 0 1px 0 rgba(154,214,232,.3), 0 4px 14px rgba(154,214,232,.18); }
+      50% { box-shadow: inset 0 1px 0 rgba(154,214,232,.5), 0 0 22px rgba(154,214,232,.45); }
+    }
     .brand { display: flex; flex-direction: column; line-height: 1.05; flex: 0 0 auto; }
     .brand .title {
       font: 900 22px/1 var(--font-brand);
@@ -225,11 +239,15 @@ const AUTO_PRESETS: readonly number[] = [10, 25, 50, 100, 250];
     }
     .brand .tag { font-size: 10px; letter-spacing: 1.6px; text-transform: uppercase; opacity: .55; margin-top: 4px; }
 
+    /* margin-left: auto pushes balance to the right edge of the top bar.
+       Was implicit before via the info button's auto-margin; that button
+       moved to the side rail, so we set it directly here. */
     .balance {
       display: flex; flex-direction: column; line-height: 1.05;
       padding: 8px 14px; border-radius: 10px;
       background: linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.3));
       border: 1px solid #9ad6e8;
+      margin-left: auto;
     }
     .balance .lbl, .lbl { font-size: 9px; letter-spacing: 1.5px; opacity: .6; text-transform: uppercase; font-weight: 600; }
     .balance strong { font: 900 22px/1 var(--font-display); color: #fff; }

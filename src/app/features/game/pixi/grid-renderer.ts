@@ -41,16 +41,28 @@ export class GridRenderer {
     this.cellsLayer = new Container();
     this.particles = new ParticleBurst(app.ticker);
 
+    // Mask the cells layer to the playable grid rectangle so the drop /
+    // tumble animations don't render symbols above or below the frame.
+    // The mask sits inside `root` so it scales/translates alongside the
+    // cells; we apply it via `cellsLayer.mask` so children outside the
+    // rect simply don't draw.
+    const cellsMask = new Graphics();
+    cellsMask.rect(0, 0, GRID_W, GRID_H).fill(0xffffff);
+
     // Order: plaque (deep) → gridlines (over plaque, behind sprites) →
     // sprites → particles → frame brass + shadow on top of everything.
+    // The mask is added to root so its transform tracks the scaled root,
+    // even though it's never visible itself.
     this.root.addChild(
       this.framePlaque,
       this.gridLines,
+      cellsMask,
       this.cellsLayer,
       this.particles.root,
       this.frameBrass,
       this.innerShadow,
     );
+    this.cellsLayer.mask = cellsMask;
     app.stage.addChild(this.root);
 
     this.winFilter = new GlowFilter({

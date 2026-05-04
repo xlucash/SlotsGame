@@ -24,6 +24,7 @@ import { SideBuyButtonComponent } from './ui/side-buy-button.component';
 import { TopBarComponent } from './ui/top-bar.component';
 import { WinPopupComponent } from './ui/win-popup.component';
 import { PixiGameComponent } from './pixi/pixi-game.component';
+import { LeaderboardPanelComponent } from '../../shared/ui/leaderboard-panel.component';
 
 @Component({
   selector: 'app-game',
@@ -43,14 +44,18 @@ import { PixiGameComponent } from './pixi/pixi-game.component';
     BigWinCelebrationComponent,
     BonusIntroComponent,
     PaytableModalComponent,
+    LeaderboardPanelComponent,
   ],
   template: `
     <div class="shell">
-      <app-top-bar (openInfo)="paytableOpen.set(true)"></app-top-bar>
+      <app-top-bar></app-top-bar>
 
       <main class="stage" #stage (click)="onStageClick()">
         <app-pixi-game #pixi></app-pixi-game>
-        <app-side-buy-button (open)="buyOpen.set(true)"></app-side-buy-button>
+        <app-side-buy-button
+          (open)="buyOpen.set(true)"
+          (info)="paytableOpen.set(true)">
+        </app-side-buy-button>
         <app-fs-info-panel></app-fs-info-panel>
         <app-fs-totalwin></app-fs-totalwin>
         <app-win-popup #popup></app-win-popup>
@@ -76,6 +81,8 @@ import { PixiGameComponent } from './pixi/pixi-game.component';
         (autoStart)="startAutoSpin($event)"
         (stopAuto)="stopAutoSpin()">
       </app-bottom-bar>
+
+      <app-leaderboard-panel game="hunters"></app-leaderboard-panel>
     </div>
   `,
   styles: [`

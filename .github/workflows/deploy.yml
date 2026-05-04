@@ -1,0 +1,97 @@
+name: Deploy to GitHub Pages
+
+# Push to main → build → deploy. Manual runs via Actions tab also supported.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Allow only one concurrent deployment, queue up newer ones, cancel stale
+# in-progress runs so a fast follow-up commit doesn't block on the prior.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+# GitHub Pages deployment via the official actions needs:
+#   pages:    write the deploy target
+#   id-token: write the OIDC identity used to claim the deployment
+#   contents: read the repo
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Generate the gitignored Firebase env file from repository secrets
+      # (Settings → Secrets and variables → Actions). The values are public
+      # Firebase web identifiers, not credentials; we route them through
+      # secrets for hygiene + easy rotation.
+      - name: Inject Firebase config
+        env:
+          FIREBASE_API_KEY:           ${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_AUTH_DOMAIN:       ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_PROJECT_ID:        ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_STORAGE_BUCKET:    ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_APP_ID:            ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_MEASUREMENT_ID:    ${{ secrets.FIREBASE_MEASUREMENT_ID }}
+        run: |
+          cat > src/environments/environment.ts <<'EOF'
+          export const firebaseConfig = {
+            apiKey: '__API_KEY__',
+            authDomain: '__AUTH_DOMAIN__',
+            projectId: '__PROJECT_ID__',
+            storageBucket: '__STORAGE_BUCKET__',
+            messagingSenderId: '__SENDER_ID__',
+            appId: '__APP_ID__',
+            measurementId: '__MEASUREMENT_ID__',
+          };
+          EOF
+          # Substitute markers without touching anything else in the file.
+          # Using `|` as the sed delimiter so values with `/` (none expected,
+          # but just in case) won't break the expression.
+          sed -i "s|__API_KEY__|${FIREBASE_API_KEY}|g"               src/environments/environment.ts
+          sed -i "s|__AUTH_DOMAIN__|${FIREBASE_AUTH_DOMAIN}|g"       src/environments/environment.ts
+          sed -i "s|__PROJECT_ID__|${FIREBASE_PROJECT_ID}|g"         src/environments/environment.ts
+          sed -i "s|__STORAGE_BUCKET__|${FIREBASE_STORAGE_BUCKET}|g" src/environments/environment.ts
+          sed -i "s|__SENDER_ID__|${FIREBASE_MESSAGING_SENDER_ID}|g" src/environments/environment.ts
+          sed -i "s|__APP_ID__|${FIREBASE_APP_ID}|g"                 src/environments/environment.ts
+          sed -i "s|__MEASUREMENT_ID__|${FIREBASE_MEASUREMENT_ID}|g" src/environments/environment.ts
+
+      - name: Build production bundle
+        # `build:pages` script applies --base-href "./" so asset URLs work
+        # under https://<user>.github.io/<repo>/ (Pages serves from a path,
+        # not the domain root).
+        run: npm run build:pages
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Angular outputs to dist/<project>/browser since v17+.
+          path: dist/slot-game/browser
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
