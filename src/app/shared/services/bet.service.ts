@@ -2,6 +2,11 @@ import { Injectable, computed, signal } from '@angular/core';
 
 export const BET_LEVELS: readonly number[] = [
   0.20, 0.40, 0.60, 1.00, 2.00, 4.00, 6.00, 10.00, 20.00, 40.00, 50.00, 60.00, 80.00, 100.00,
+  // Upper tiers reachable only in Hunter's Cluster (cap = 300). At its
+  // ×22 buy cost mult the 300 PLN tier produces a ~6 600 PLN buy, the
+  // headroom most players will actually use a winning streak to climb to.
+  // Yeti's stays capped at 50 (×190 mult = ~9.5 k buy).
+  150.00, 200.00, 300.00,
 ];
 
 const DEFAULT_LEVEL_INDEX = 3; // 1.00 PLN

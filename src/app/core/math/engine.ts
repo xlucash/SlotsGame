@@ -152,8 +152,29 @@ export function spin(opts: SpinOptions): SpinResult {
       break;
     }
 
-    const baseWin = clusters.reduce((s, c) => s + c.payout, 0);
-    const stepMult = isFreeSpin ? multiplier : 1;
+    // In FS, redirect each cluster's wild multiplier into the *running*
+    // game multiplier instead of multiplying that cluster's payout
+    // directly: a ×5 wild in a cluster pushes the FS multiplier up by 5
+    // (so it's now in effect for THIS cluster's payout AND every
+    // subsequent cascade in this spin). In base play we keep the
+    // existing per-cluster wild boost since there's no running mult.
+    let stepMult: number;
+    let baseWin: number;
+    if (isFreeSpin) {
+      let wildBonus = 0;
+      for (const c of clusters) {
+        if (c.wildMultiplier > 1) wildBonus += c.wildMultiplier;
+      }
+      multiplier += wildBonus;
+      stepMult = multiplier;
+      // Strip the per-cluster wild factor we no longer want — `c.payout`
+      // is base × wildMultiplier; divide it back out so we're not
+      // double-counting the wild contribution.
+      baseWin = clusters.reduce((s, c) => s + c.payout / c.wildMultiplier, 0);
+    } else {
+      stepMult = 1;
+      baseWin = clusters.reduce((s, c) => s + c.payout, 0);
+    }
     const stepWin = baseWin * stepMult;
     totalWin += stepWin;
 

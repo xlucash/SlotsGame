@@ -136,10 +136,11 @@ export class GameComponent {
   protected readonly autoActive = computed(() => this.autoRemaining() > 0);
 
   constructor() {
-    // Cap the shared bet ladder for Hunter's at 100 PLN — top buy cost
-    // (×60) lands at 6 000 PLN, comfortably within the 8 000 starting
-    // bankroll without making the modal show buys you'd never afford.
-    this.bet.setMaxBet(100);
+    // Cap the shared bet ladder for Hunter's at 300 PLN — at the ×22
+    // buy cost mult that's a ~6 600 PLN max buy, which is the headroom
+    // a winning streak would actually want. (Earlier 100 PLN cap only
+    // produced a 2 200 PLN buy.)
+    this.bet.setMaxBet(300);
 
     effect(() => {
       const sw = this.pixi?.stepWin();
