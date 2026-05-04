@@ -146,12 +146,16 @@ export function spin(opts: SpinOptions): SpinResult {
  * to land the trigger condition (`scattersCount` SUMMITs) on the board so
  * the player sees the scatters appear before the bonus intro plays.
  *
- * Implementation: roll a normal random grid, then plant `scattersCount`
- * SUMMITs at random cells. We deliberately don't generate any winning lines
- * or expansions — keeps the visual focused on the scatter celebration.
+ * Implementation: roll a normal random grid, plant `scattersCount` SUMMITs
+ * at random cells, and treat any YETI that happens to land like a real
+ * spin would — expand its column and carry it into the FS round via
+ * `endPersistentWilds`. Caller is expected to feed that array back into
+ * the game service so the first FS spin starts with those wild reels
+ * already active.
  */
 export function makeBonusBuyTriggerSpin(opts: { bet: number; rng: Rng; scattersCount: number; freeSpinsAwarded: number }): SpinResult {
   const grid = randomGrid(opts.rng);
+
   // Plant scatters in random distinct cells.
   const cells: Array<[number, number]> = [];
   for (let c = 0; c < COLS; c++) for (let r = 0; r < ROWS; r++) cells.push([c, r]);
@@ -162,17 +166,34 @@ export function makeBonusBuyTriggerSpin(opts: { bet: number; rng: Rng; scattersC
     const [c, r] = cells[i];
     grid[c][r] = 'SUMMIT';
   }
+
+  // Mirror the real spin's expansion logic for any YETI in the grid so the
+  // player sees the column expand AND the wild carries into FS. Same rule
+  // as `spin()`: first YETI from the top is the trigger cell.
+  const newlyExpanded: NewlyExpandedWild[] = [];
+  for (let c = 0; c < COLS; c++) {
+    for (let r = 0; r < ROWS; r++) {
+      if (grid[c][r] !== 'YETI') continue;
+      const mult = pickWildMultiplier(opts.rng);
+      newlyExpanded.push({ col: c, multiplier: mult, triggerCell: [c, r] });
+      break;
+    }
+  }
+  const endPersistentWilds: PersistentWild[] = newlyExpanded.map(
+    (ne) => ({ col: ne.col, multiplier: ne.multiplier }),
+  );
+
   return {
     bet: opts.bet,
     isFreeSpin: false,
     initialGrid: grid,
     persistentWilds: [],
-    newlyExpanded: [],
+    newlyExpanded,
     lineWins: [],
     totalWin: 0,
     scattersLanded: opts.scattersCount,
     triggeredFreeSpins: opts.freeSpinsAwarded,
-    endPersistentWilds: [],
+    endPersistentWilds,
   };
 }
 

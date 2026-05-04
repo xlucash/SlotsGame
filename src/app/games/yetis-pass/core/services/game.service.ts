@@ -143,6 +143,18 @@ export class YetiGameService {
   }
 
   /**
+   * Hand-off from the bonus-buy visual spin: any wild that expanded
+   * during the fake-trigger animation needs to become an active
+   * persistent wild for the FS round. The visual spin doesn't go
+   * through commitSpin (it'd credit fake wins / advance counters), so
+   * the host calls this after the animation finishes.
+   */
+  applyBuyVisualPersistentWilds(wilds: ReadonlyArray<PersistentWild>): void {
+    if (wilds.length === 0) return;
+    this._persistentWilds.set(wilds);
+  }
+
+  /**
    * Buy the bonus directly: debit cost, drop player straight into the
    * spinning state — bypassing the `fs-intro` phase (and therefore the
    * "Through the Pass / Begin the Climb" overlay). The host plays a

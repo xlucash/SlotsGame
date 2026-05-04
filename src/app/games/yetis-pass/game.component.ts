@@ -544,9 +544,14 @@ export class YetiGameComponent {
     try {
       // Fake trigger spin so the player sees scatters land like a natural
       // trigger would. The cost was debited inside `buyBonus()`; this spin
-      // pays nothing.
-      await this.pixi.play(this.game.makeBonusBuyVisualSpin());
+      // pays nothing. If a YETI happened to land in the visual grid we
+      // hand its expansion off to the game service so it persists into
+      // the first FS spin (otherwise the player sees the column expand
+      // and then mysteriously go away).
+      const visualSpin = this.game.makeBonusBuyVisualSpin();
+      await this.pixi.play(visualSpin);
       await this.pixi.glowScatters();
+      this.game.applyBuyVisualPersistentWilds(visualSpin.endPersistentWilds);
       // Cinematic — no "Begin the Climb" overlay, since `buyBonus()` set the
       // phase straight to `fs-spinning`.
       await this.bonusIntro.play();
