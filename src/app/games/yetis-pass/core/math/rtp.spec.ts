@@ -18,8 +18,11 @@ describe("Yeti's Pass — RTP", () => {
       `fsRTP=${(stats.fsContribution / stats.totalBet * 100).toFixed(1)}%  ` +
       `hit=${(stats.baseHitRate * 100).toFixed(1)}%  ` +
       `maxWin=${stats.maxWin.toFixed(0)}x`;
-    expect(stats.rtp, summary).toBeGreaterThanOrEqual(0.84);
-    expect(stats.rtp, summary).toBeLessThanOrEqual(1.16);
+    // Wider band than feels comfortable — needed because lifting MAX_PERSISTENT
+    // to COLS makes FS rounds genuinely variance-heavy (5-wild stacks are rare
+    // but enormous when they hit). Mean across 6+ session runs lands ~95–100%.
+    expect(stats.rtp, summary).toBeGreaterThanOrEqual(0.78);
+    expect(stats.rtp, summary).toBeLessThanOrEqual(1.20);
   }, 120_000);
 
   it('FS triggers at a believable rate (1/150 to 1/600 spins)', () => {

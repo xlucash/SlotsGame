@@ -161,10 +161,9 @@ export class GameComponent {
   protected onKeyDown(e: KeyboardEvent): void {
     if (e.repeat) return;
     if (this.buyOpen()) {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        this.buyOpen.set(false);
-      }
+      // The buy modal owns its own Escape handling (it gates close while
+      // the fortune wheel is in flight; closing then would be a free roll).
+      // Bail out so this listener doesn't yank the modal closed regardless.
       return;
     }
     if (this.paytableOpen()) {

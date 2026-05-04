@@ -49,8 +49,8 @@ export const SYMBOL_WEIGHTS: Record<SymbolId, number> = {
   SNOW_LEOPARD:   5,
   MAMMOTH:        4,
   // Specials
-  YETI:           0.90,
-  SUMMIT:         1.2,
+  YETI:           0.80,
+  SUMMIT:         1.28,
 };
 
 const ENTRIES: ReadonlyArray<readonly [SymbolId, number]> =

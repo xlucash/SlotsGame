@@ -49,11 +49,14 @@ export interface SpinOptions {
   persistentWilds?: ReadonlyArray<PersistentWild>;
 }
 
-/** Hard cap on simultaneous persistent wild reels in FS. 3 keeps the round
- *  feeling generous (the typical FS round will stack 1–3 yetis) while
- *  bounding RTP — at COLS=5 the FS contribution explodes because almost
- *  every payline crosses several multiplier columns. */
-const MAX_PERSISTENT = 3;
+/** All extended wilds persist for the rest of the round — capped only by
+ *  the number of columns. Players were confused when a 4th yeti landed on
+ *  screen and silently disappeared next spin under a tighter cap. The
+ *  payline evaluator already requires a non-wild anchor for any line to
+ *  pay, so the all-wild board pays nothing on its own; that's the real
+ *  ceiling on runaway RTP. YETI weight + paytable absorb the extra value
+ *  this brings to multi-stack boards. */
+const MAX_PERSISTENT = COLS;
 
 export function spin(opts: SpinOptions): SpinResult {
   const { bet, rng, isFreeSpin = false } = opts;
@@ -91,7 +94,12 @@ export function spin(opts: SpinOptions): SpinResult {
   const totalWin = lineWins.reduce((s, w) => s + w.payout, 0);
 
   // 6. Scatter count + FS trigger.
-  const scattersLanded = countScatters(grid);
+  //    Only count SUMMITs that are *visible* — cells inside an expanded
+  //    wild column are covered by the tall-yeti graphic, so the player
+  //    can't see them and shouldn't be credited for them. Without this
+  //    filter you can land 1 visible scatter and trigger because two more
+  //    are hiding under wild reels.
+  const scattersLanded = countScatters(grid, wildColumns);
   let triggeredFreeSpins = 0;
   if (!isFreeSpin && scattersLanded >= FREE_SPINS_TRIGGER_COUNT) {
     triggeredFreeSpins = FREE_SPINS_AWARDED;
@@ -182,9 +190,12 @@ function randomGrid(rng: Rng): Grid {
   return g;
 }
 
-function countScatters(grid: Grid): number {
+function countScatters(grid: Grid, wildColumns: ReadonlyMap<number, number>): number {
   let n = 0;
   for (let c = 0; c < COLS; c++) {
+    // Cells in an expanded-wild column are hidden under the tall yeti
+    // sprite, so we treat them as "not on the board" for scatter purposes.
+    if (wildColumns.has(c)) continue;
     for (let r = 0; r < ROWS; r++) if (grid[c][r] === 'SUMMIT') n++;
   }
   return n;

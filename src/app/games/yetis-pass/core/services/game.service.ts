@@ -87,7 +87,8 @@ export class YetiGameService {
       this._lastWin.set(result.totalWin);
       this.balance.credit(result.totalWin);
       if (result.triggeredFreeSpins > 0) {
-        this.fireFsAward(result.triggeredFreeSpins);
+        // Initial trigger: the FS-intro overlay + bonus-intro cinematic
+        // already announce "you won free spins"; no separate +N popup.
         this._freeSpinsLeft.set(result.triggeredFreeSpins);
         this._persistentWilds.set([]);
         this._fsTotalWin.set(0);
@@ -99,6 +100,9 @@ export class YetiGameService {
       this._fsTotalWin.update((v) => v + result.totalWin);
       this._persistentWilds.set(result.endPersistentWilds);
       if (result.triggeredFreeSpins > 0) {
+        // Retrigger inside FS — this is the only path that should fire the
+        // +N FREE SPINS popup, since the player hit fresh scatters and
+        // gained additional spins mid-round.
         this.fireFsAward(result.triggeredFreeSpins);
         this._freeSpinsLeft.update((v) => v + result.triggeredFreeSpins);
       }
@@ -154,7 +158,7 @@ export class YetiGameService {
     this._persistentWilds.set([]);
     this._freeSpinsLeft.set(this.BONUS_BUY_FS_COUNT);
     this._phase.set('fs-spinning');
-    this.fireFsAward(this.BONUS_BUY_FS_COUNT);
+    // No +N popup here — the bonus-intro cinematic announces the round.
     return true;
   }
 

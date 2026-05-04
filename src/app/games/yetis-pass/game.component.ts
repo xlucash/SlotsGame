@@ -20,6 +20,7 @@ import { YetiPaytableModalComponent } from './ui/paytable-modal.component';
 import { YetiBonusBuyModalComponent } from './ui/bonus-buy-modal.component';
 import { YetiBonusIntroComponent } from './ui/bonus-intro.component';
 import { YetiBigWinCelebrationComponent } from './ui/big-win-celebration.component';
+import { YetiFsAwardPopupComponent } from './ui/fs-award-popup.component';
 import { YetiFsInfoPanelComponent } from './ui/fs-info-panel.component';
 import { YetiFsTotalwinComponent } from './ui/fs-totalwin.component';
 import { YetiSideBuyButtonComponent } from './ui/side-buy-button.component';
@@ -39,6 +40,7 @@ const AUTO_PRESETS: readonly number[] = [10, 25, 50, 100, 250];
     YetiBonusBuyModalComponent,
     YetiBonusIntroComponent,
     YetiBigWinCelebrationComponent,
+    YetiFsAwardPopupComponent,
     YetiFsInfoPanelComponent,
     YetiFsTotalwinComponent,
     YetiSideBuyButtonComponent,
@@ -76,6 +78,7 @@ const AUTO_PRESETS: readonly number[] = [10, 25, 50, 100, 250];
         </app-yeti-side-buy-button>
         <app-yeti-fs-info-panel></app-yeti-fs-info-panel>
         <app-yeti-fs-totalwin></app-yeti-fs-totalwin>
+        <app-yeti-fs-award-popup></app-yeti-fs-award-popup>
       </main>
 
       <footer class="bottom-bar">

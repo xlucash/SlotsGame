@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Output, ViewChild, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, HostListener, Output, ViewChild, inject, signal } from '@angular/core';
 import { BalanceService } from '../../../shared/services/balance.service';
 import { BetService } from '../../../shared/services/bet.service';
 import { GameService } from '../../../core/services/game.service';
@@ -25,7 +25,9 @@ type View = 'choose' | 'wheel';
   template: `
     <div class="overlay" (click)="onBackdropClick()">
       <div class="modal panel-wood" (click)="$event.stopPropagation()" role="dialog" aria-labelledby="bb-title">
-        <button class="close" (click)="close.emit()" aria-label="Close">×</button>
+        @if (view() === 'choose') {
+          <button class="close" (click)="close.emit()" aria-label="Close">×</button>
+        }
 
         <div class="ornament" aria-hidden="true">
           <svg viewBox="0 0 200 14" width="220" height="14">
@@ -397,8 +399,18 @@ export class BonusBuyModalComponent {
   protected canAfford(): boolean { return this.balance.balance() >= this.cost(); }
 
   protected onBackdropClick(): void {
-    // Don't allow backdrop dismiss while wheel is mid-spin (no result yet).
-    if (this.view() === 'wheel' && this.wheelResult() === null) return;
+    // Once the player commits to the wheel they can't back out — closing
+    // the modal mid-wheel or after the result lands would be a free roll.
+    // Continue is the only path forward; close is hidden in wheel view.
+    if (this.view() === 'wheel') return;
+    this.close.emit();
+  }
+
+  /** Escape key — same gate as the X button: only allowed in the choose view. */
+  @HostListener('window:keydown.escape', ['$event'])
+  protected onEscape(e: Event): void {
+    if (this.view() === 'wheel') return;
+    e.preventDefault();
     this.close.emit();
   }
 
