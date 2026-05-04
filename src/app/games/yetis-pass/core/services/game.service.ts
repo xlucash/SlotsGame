@@ -120,7 +120,15 @@ export class YetiGameService {
   }
 
   /** Cost of bonus buy in × current bet. */
-  readonly BONUS_BUY_COST_MULT = 60;
+  /**
+   * Cost multiplier on the bonus buy (cost = bet × this).
+   * Calibrated against measured buy-only RTP: an organic FS trigger is
+   * worth ~141× bet on average (FS contributes ~66 pp of total RTP at a
+   * 1/213 trigger rate), so a 60× cost means players pocket ~80× per buy.
+   * 190× lands the buy RTP near the ~96 % target rather than enriching
+   * the bonus-buy player vs the natural-trigger one.
+   */
+  readonly BONUS_BUY_COST_MULT = 190;
   /** Free spins awarded by a bonus buy. */
   readonly BONUS_BUY_FS_COUNT = 10;
 

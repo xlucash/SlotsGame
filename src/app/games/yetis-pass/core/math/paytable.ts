@@ -46,8 +46,10 @@ export const PAYING_SYMBOLS_RANKED: readonly SymbolId[] = [
 
 export const FREE_SPINS_TRIGGER_COUNT = 3;
 export const FREE_SPINS_AWARDED = 10;
-/** Retrigger inside FS: 3+ scatters add another 10 spins. */
-export const FREE_SPINS_RETRIGGER_AWARD = 10;
+/** Retrigger inside FS: 3+ scatters add a small +3 boost. The full 10
+ *  re-grant felt overgenerous now that all yetis persist for the whole
+ *  round — a single retrigger could double the round's length. */
+export const FREE_SPINS_RETRIGGER_AWARD = 3;
 
 /* ============================================================
  *  Expanding wild multiplier distribution

@@ -444,6 +444,12 @@ export class YetiGameComponent {
   private busy = false;
 
   constructor() {
+    // Cap the shared bet ladder for Yeti's at 50 PLN — top buy cost
+    // (×190) lands at 9 500 PLN, just under the 10 000 ceiling. Without
+    // this cap the buy modal would show 19 000 / 38 000 PLN buys nobody
+    // could afford.
+    this.bet.setMaxBet(50);
+
     // Mirror the Pixi grid bounding box into CSS custom properties on the
     // stage. The HTML side panels (Buy Hunt, FS info, Total Win) anchor
     // themselves via these variables so they always sit at the grid edges.
