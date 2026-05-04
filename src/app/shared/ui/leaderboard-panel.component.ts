@@ -74,7 +74,10 @@ const GAME_TITLE: Record<GameKey, string> = {
       right: 14px;
       top: 50%;
       transform: translateY(-50%);
-      width: 220px;
+      /* Wide enough to fit ~15-char nicknames without ellipsis after the
+         rank + amount columns claim their share. Was 220px which clipped
+         after ~8 chars. */
+      width: 260px;
       z-index: 3;
       pointer-events: none;
       /* Hosts override --lb-accent / --lb-accent-soft to theme the panel. */
@@ -113,7 +116,7 @@ const GAME_TITLE: Record<GameKey, string> = {
     }
     .me {
       font-size: 10px; opacity: .7;
-      max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
       color: var(--lb-accent);
     }
 
