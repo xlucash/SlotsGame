@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Output, computed, inject } from '@angular/core';
-import { BalanceService } from '../../../shared/services/balance.service';
 import { formatPLN } from '../../../shared/util/format';
 import { YetiGameService } from '../core/services/game.service';
 
@@ -136,7 +135,6 @@ import { YetiGameService } from '../core/services/game.service';
 })
 export class YetiSideBuyButtonComponent {
   protected readonly game = inject(YetiGameService);
-  private readonly balance = inject(BalanceService);
   protected readonly formatPLN = formatPLN;
 
   @Output() readonly open = new EventEmitter<void>();
@@ -146,12 +144,16 @@ export class YetiSideBuyButtonComponent {
    * Buy is visible during base play (idle + mid-spin) and stays hidden in
    * the FS round where it'd be meaningless. During mid-spin we leave it on
    * screen but `canBuy` returns false so the button reads as inactive.
+   *
+   * Note: balance affordability is NOT checked here on purpose — the
+   * player can open the buy modal even if the current bet's buy cost is
+   * too high, lower their bet inside the modal, and confirm at a price
+   * they can afford. The "BEGIN THE CLIMB" CTA inside the modal is what
+   * actually gates on balance.
    */
   protected readonly showBuy = computed(() => {
     const p = this.game.phase();
     return p === 'idle' || p === 'spinning';
   });
-  protected readonly canBuy = computed(
-    () => this.game.phase() === 'idle' && this.balance.balance() >= this.game.bonusCost(),
-  );
+  protected readonly canBuy = computed(() => this.game.phase() === 'idle');
 }
