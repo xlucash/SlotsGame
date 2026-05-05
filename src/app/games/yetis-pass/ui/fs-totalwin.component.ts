@@ -23,7 +23,7 @@ import { YetiGameService } from '../core/services/game.service';
       <div class="bar" role="status" aria-live="polite">
         <span class="label">{{ label() }}</span>
         <strong class="amount">
-          <app-counter [value]="amount()" [duration]="0.35"></app-counter>
+          <app-counter [value]="amount()" [duration]="counterDuration()"></app-counter>
           <em>PLN</em>
         </strong>
       </div>
@@ -105,5 +105,10 @@ export class YetiFsTotalwinComponent {
   );
   protected readonly amount = computed(
     () => this.game.inFreeSpins() ? this.game.fsTotalWin() : this._lastWin(),
+  );
+  /** Tally counts up during FS so the player watches it climb; auto-spin
+   *  Last Win snaps because each spin is its own value, not a tally. */
+  protected readonly counterDuration = computed(
+    () => this.game.inFreeSpins() ? 0.35 : 0,
   );
 }
