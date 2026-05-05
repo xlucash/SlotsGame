@@ -1,10 +1,17 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, computed, inject, signal } from '@angular/core';
 import { CounterComponent } from '../../../shared/ui/counter.component';
 import { YetiGameService } from '../core/services/game.service';
 
 /**
- * "Total Hunt Win" bar pinned beneath the grid while in free spins.
- * Cumulative win across the current FS round, climbing as cascades land.
+ * Readout pinned beneath the grid. Two modes:
+ *  - Free spins: shows the cumulative "Total Hunt Win" across the round.
+ *  - Auto-spin (base play): shows the per-spin Last Win, prominently
+ *    enough that the player tracking 50–250 auto rounds can actually
+ *    see what just landed.
+ *  - Otherwise hidden.
+ *
+ * The bottom-bar swaps to the auto-spin running total during auto, so
+ * this readout taking over the per-spin Last Win doesn't lose info.
  */
 @Component({
   selector: 'app-yeti-fs-totalwin',
@@ -14,9 +21,9 @@ import { YetiGameService } from '../core/services/game.service';
   template: `
     @if (visible()) {
       <div class="bar" role="status" aria-live="polite">
-        <span class="label">Total Hunt Win</span>
+        <span class="label">{{ label() }}</span>
         <strong class="amount">
-          <app-counter [value]="game.fsTotalWin()" [duration]="0.45"></app-counter>
+          <app-counter [value]="amount()" [duration]="0.35"></app-counter>
           <em>PLN</em>
         </strong>
       </div>
@@ -83,5 +90,20 @@ import { YetiGameService } from '../core/services/game.service';
 })
 export class YetiFsTotalwinComponent {
   protected readonly game = inject(YetiGameService);
-  protected readonly visible = computed(() => this.game.inFreeSpins());
+
+  // Auto-spin state pushed in by the host (it owns autoRemaining).
+  private readonly _autoActive = signal(false);
+  private readonly _lastWin = signal(0);
+  @Input() set autoActive(v: boolean) { this._autoActive.set(v); }
+  @Input() set lastWin(v: number) { this._lastWin.set(v); }
+
+  protected readonly visible = computed(
+    () => this.game.inFreeSpins() || this._autoActive(),
+  );
+  protected readonly label = computed(
+    () => this.game.inFreeSpins() ? 'Total Hunt Win' : 'Last Win',
+  );
+  protected readonly amount = computed(
+    () => this.game.inFreeSpins() ? this.game.fsTotalWin() : this._lastWin(),
+  );
 }

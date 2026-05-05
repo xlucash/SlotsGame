@@ -84,10 +84,9 @@ const AUTO_PRESETS: readonly number[] = [10, 25, 50, 100, 250];
       </div>
 
       <div class="cluster win-cluster">
-        <span class="label">Last Win</span>
-        <strong class="amount" [class.flash]="game.lastWin() > 0">
-          <!-- Last Win snaps to the final value, no count-up animation. -->
-          <app-counter [value]="game.lastWin()" [duration]="0"></app-counter>
+        <span class="label">{{ autoActive ? 'Auto Win' : 'Last Win' }}</span>
+        <strong class="amount" [class.flash]="winDisplay() > 0">
+          <app-counter [value]="winDisplay()" [duration]="0"></app-counter>
           <em>PLN</em>
         </strong>
       </div>
@@ -286,6 +285,15 @@ export class BottomBarComponent {
 
   @Input() autoActive = false;
   @Input() autoRemaining = 0;
+  /** Running total of wins during the active auto-spin run (host owns it). */
+  @Input() autoWin = 0;
+
+  /** Pick the right number for the win-cluster: running total during auto,
+   *  per-spin last-win otherwise. Plain getter so OnPush re-reads it on
+   *  each input change instead of needing the value to live in a signal. */
+  protected winDisplay(): number {
+    return this.autoActive ? this.autoWin : this.game.lastWin();
+  }
 
   @Output() readonly spin = new EventEmitter<void>();
   @Output() readonly autoStart = new EventEmitter<number>();

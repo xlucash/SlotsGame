@@ -57,7 +57,10 @@ import { LeaderboardPanelComponent } from '../../shared/ui/leaderboard-panel.com
           (info)="paytableOpen.set(true)">
         </app-side-buy-button>
         <app-fs-info-panel></app-fs-info-panel>
-        <app-fs-totalwin></app-fs-totalwin>
+        <app-fs-totalwin
+          [autoActive]="autoActive()"
+          [lastWin]="lastSettledWin()">
+        </app-fs-totalwin>
         <app-win-popup #popup></app-win-popup>
         <app-fs-award-popup></app-fs-award-popup>
         <app-bonus-intro #bonusIntro></app-bonus-intro>
@@ -77,6 +80,7 @@ import { LeaderboardPanelComponent } from '../../shared/ui/leaderboard-panel.com
       <app-bottom-bar
         [autoActive]="autoActive()"
         [autoRemaining]="autoRemaining()"
+        [autoWin]="autoSpinTotal()"
         (spin)="onSpin()"
         (autoStart)="startAutoSpin($event)"
         (stopAuto)="stopAutoSpin()">
@@ -134,6 +138,14 @@ export class GameComponent {
    */
   protected readonly autoRemaining = signal(0);
   protected readonly autoActive = computed(() => this.autoRemaining() > 0);
+  /** Running total of wins during the current auto-spin run. Resets on
+   *  startAutoSpin, climbs after each landed spin; surfaced in the
+   *  bottom-bar's win-cluster while auto is active. */
+  protected readonly autoSpinTotal = signal(0);
+  /** Most recently *settled* spin's win. Stable between spins (unlike
+   *  game.lastWin() which zeroes at every spin start), so the under-grid
+   *  Last Win readout doesn't flash to 0 between auto-spin rounds. */
+  protected readonly lastSettledWin = signal(0);
 
   constructor() {
     // Cap the shared bet ladder for Hunter's at 150 PLN — at the ×22
@@ -233,6 +245,7 @@ export class GameComponent {
     if (this.autoActive()) return;
     if (count <= 0) return;
     this.autoRemaining.set(count);
+    this.autoSpinTotal.set(0);
     await this.runAutoSpinLoop();
   }
 
@@ -248,6 +261,9 @@ export class GameComponent {
     while (this.autoRemaining() > 0) {
       if (this.game.phase() !== 'idle' || !this.game.canSpin()) break;
       await this.triggerPrimaryAction();
+      const justWon = this.game.lastWin();
+      this.autoSpinTotal.update((s) => s + justWon);
+      this.lastSettledWin.set(justWon);
       // FS-trigger is the conventional auto-stop condition.
       if (this.game.inFreeSpins() || this.game.phase() !== 'idle') {
         this.autoRemaining.set(0);

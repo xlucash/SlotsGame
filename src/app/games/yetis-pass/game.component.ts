@@ -77,7 +77,10 @@ const AUTO_PRESETS: readonly number[] = [10, 25, 50, 100, 250];
           (info)="paytableOpen.set(true)">
         </app-yeti-side-buy-button>
         <app-yeti-fs-info-panel></app-yeti-fs-info-panel>
-        <app-yeti-fs-totalwin></app-yeti-fs-totalwin>
+        <app-yeti-fs-totalwin
+          [autoActive]="autoActive()"
+          [lastWin]="lastSettledWin()">
+        </app-yeti-fs-totalwin>
         <app-yeti-fs-award-popup></app-yeti-fs-award-popup>
       </main>
 
@@ -138,9 +141,9 @@ const AUTO_PRESETS: readonly number[] = [10, 25, 50, 100, 250];
         </div>
 
         <div class="win">
-          <span class="lbl">Last Win</span>
-          <strong [class.flash]="game.lastWin() > 0">
-            <app-counter [value]="game.lastWin()" [duration]="0"></app-counter>
+          <span class="lbl">{{ autoActive() ? 'Auto Win' : 'Last Win' }}</span>
+          <strong [class.flash]="(autoActive() ? autoSpinTotal() : game.lastWin()) > 0">
+            <app-counter [value]="autoActive() ? autoSpinTotal() : game.lastWin()" [duration]="0"></app-counter>
             <em>PLN</em>
           </strong>
         </div>
@@ -440,6 +443,15 @@ export class YetiGameComponent {
   protected readonly autoMenuOpen = signal(false);
   private readonly autoRemaining = signal(0);
   protected readonly autoActive = computed(() => this.autoRemaining() > 0);
+  /** Running total of wins during the current auto-spin run. Resets on
+   *  startAutoSpin, climbs after each landed spin, displayed in the
+   *  bottom-right corner where Last Win normally lives. */
+  protected readonly autoSpinTotal = signal(0);
+  /** Most recently *settled* spin's win. Unlike `game.lastWin()` (which
+   *  is zeroed at the start of every spin) this value is stable between
+   *  spins, so the under-grid Last Win readout doesn't flash to 0 every
+   *  time auto-spin kicks off the next round. */
+  protected readonly lastSettledWin = signal(0);
 
   private busy = false;
 
@@ -586,9 +598,13 @@ export class YetiGameComponent {
   private async startAutoSpin(count: number): Promise<void> {
     if (this.autoActive() || count <= 0) return;
     this.autoRemaining.set(count);
+    this.autoSpinTotal.set(0);
     while (this.autoRemaining() > 0) {
       if (this.game.phase() !== 'idle' || !this.game.canSpin()) break;
       await this.spinOnce();
+      const justWon = this.game.lastWin();
+      this.autoSpinTotal.update((s) => s + justWon);
+      this.lastSettledWin.set(justWon);
       // Auto-stop on FS trigger.
       if (this.game.inFreeSpins() || this.game.phase() !== 'idle') {
         this.autoRemaining.set(0);

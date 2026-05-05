@@ -239,6 +239,15 @@ function evaluatePaylines(
 ): LineWin[] {
   const wins: LineWin[] = [];
 
+  // Full-board wild — all 5 columns expanded — used to pay nothing under
+  // the "needs an anchor" rule, leaving the player with empty spins they
+  // could not escape (the persistent-wilds cap is COLS, so once it
+  // happens the round can't return to a non-wild board). Treat the
+  // jackpot scenario as 5-of-a-kind of the highest-paying symbol on
+  // every payline, with the wild-column multipliers applied as usual.
+  const allWild = wildColumns.size >= COLS;
+  const FULLBOARD_FALLBACK_SYMBOL: SymbolId = 'MAMMOTH';
+
   for (let i = 0; i < PAYLINES.length; i++) {
     const line = PAYLINES[i];
 
@@ -249,13 +258,33 @@ function evaluatePaylines(
       lineSymbols.push(wildColumns.has(c) ? 'YETI' : grid[c][r]);
     }
 
-    // A line needs at least one non-wild anchor to pay. All-wild runs pay
-    // nothing — otherwise persistent-wild rounds would auto-win every line.
     let matchSymbol: SymbolId | null = null;
     for (const s of lineSymbols) {
       if (s !== 'YETI' && s !== 'SUMMIT') { matchSymbol = s; break; }
     }
-    if (matchSymbol === null) continue;
+    if (matchSymbol === null) {
+      if (!allWild) continue;
+      // Full wild board jackpot: pay each payline as a 5-of-a-kind of
+      // the top-paying symbol at flat multiplier (×1). Wild multipliers
+      // are deliberately NOT compounded here — with 5 wild reels the
+      // additive sum stacks high enough that adding it on top of 25
+      // separate jackpot lines pushes RTP into runaway territory. Flat
+      // pay keeps it a healthy bonus payout (~111× bet per spin) without
+      // wrecking the long-run economics.
+      const base = linePayout(FULLBOARD_FALLBACK_SYMBOL, 5, bet);
+      if (base <= 0) continue;
+      const cells: Array<readonly [number, number]> = [];
+      for (let c = 0; c < COLS; c++) cells.push([c, line[c]] as const);
+      wins.push({
+        lineIndex: i,
+        symbol: FULLBOARD_FALLBACK_SYMBOL,
+        count: 5,
+        cells,
+        payout: base,
+        multiplierApplied: 1,
+      });
+      continue;
+    }
 
     // Count consecutive matches from the left (YETI substitutes; SUMMIT breaks).
     let count = 0;
